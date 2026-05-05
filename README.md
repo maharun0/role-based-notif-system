@@ -24,6 +24,24 @@ To stop:
 docker compose down
 ```
 
+## How To Run Tests
+
+### Option A: Run tests inside Docker (recommended)
+
+```bash
+docker compose up --build
+docker compose exec server uv run pytest -q
+```
+
+### Option B: Run tests from host machine
+
+```bash
+docker compose up -d postgres
+cd server
+uv sync --group dev
+uv run pytest -q
+```
+
 ## Core Features
 
 - **Role-based delivery:** Admin can target all users or specific roles
