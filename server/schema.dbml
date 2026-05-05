@@ -1,0 +1,56 @@
+// Role-Based Notification System — DBML Schema Reference
+// Added in Phase 2A
+
+Project notification_system {
+  database_type: "SQLite"
+  Note: "Role-Based Notification System"
+}
+
+Table roles {
+  id integer [pk, increment]
+  name varchar(50) [unique, not null, note: "Admin | Manager | Editor | Viewer | Support"]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table users {
+  id integer [pk, increment]
+  name varchar(100) [not null]
+  email varchar(255) [unique, not null]
+  role_id integer [ref: > roles.id, not null]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table notifications {
+  id integer [pk, increment]
+  title varchar(200) [not null]
+  message text [not null]
+  audience_type varchar(20) [not null, note: "ALL | BY_ROLE"]
+  created_by integer [ref: > users.id, not null]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table notification_roles {
+  // Many-to-many: notifications -> roles (when audience_type = BY_ROLE)
+  id integer [pk, increment]
+  notification_id integer [ref: > notifications.id, not null]
+  role_id integer [ref: > roles.id, not null]
+
+  Indexes {
+    (notification_id, role_id) [unique]
+  }
+}
+
+Table notification_recipients {
+  // Per-user delivery + read state
+  id integer [pk, increment]
+  notification_id integer [ref: > notifications.id, not null]
+  user_id integer [ref: > users.id, not null]
+  is_read boolean [default: false, not null]
+  read_at timestamp [null]
+  delivered_at timestamp [default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    (notification_id, user_id) [unique]
+    (user_id, is_read)
+  }
+}
