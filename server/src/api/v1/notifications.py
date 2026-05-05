@@ -43,7 +43,7 @@ async def list_notifications(
         select(NotificationRecipient)
         .where(NotificationRecipient.user_id == user_id)
         .options(selectinload(NotificationRecipient.notification))
-        .order_by(NotificationRecipient.delivered_at.desc())
+        .order_by(NotificationRecipient.delivered_at.desc(), NotificationRecipient.id.desc())
     )
     if is_read is not None:
         stmt = stmt.where(NotificationRecipient.is_read == is_read)
