@@ -97,7 +97,10 @@ async def mark_read(
         raise HTTPException(status_code=404, detail="Notification not found for this user")
 
     recipient.is_read = body.is_read
-    recipient.read_at = datetime.now(timezone.utc) if body.is_read else None
+    # Columns are TIMESTAMP WITHOUT TIME ZONE; asyncpg rejects tz-aware values for that type.
+    recipient.read_at = (
+        datetime.now(timezone.utc).replace(tzinfo=None) if body.is_read else None
+    )
     await db.commit()
     await db.refresh(recipient)
     return recipient

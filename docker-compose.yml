@@ -1,8 +1,9 @@
 services:
   postgres:
     image: postgres:16-alpine
+    # Host port 5433 avoids clashing with a locally installed Postgres on 5432.
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -21,6 +22,12 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/notifications
+      # So `docker compose exec server uv run pytest -q` works without manual env.
+      - NOTIF_TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/notifications_test
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGUSER=postgres
+      - PGPASSWORD=postgres
       - LOG_LEVEL=INFO
     depends_on:
       postgres:

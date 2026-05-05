@@ -1,6 +1,6 @@
+import os
 from collections.abc import AsyncGenerator
 
-import os
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -11,13 +11,15 @@ from src.db.models import Role, User
 from src.db.session import get_session
 from src.main import app
 
+# Compose publishes Postgres on host port 5433 (see root docker-compose.yml).
+# Use NOTIF_TEST_DATABASE_URL to override — avoids clashing with a generic
+# TEST_DATABASE_URL many developers export globally for other stacks.
+_DEFAULT_TEST_DB = "postgresql+asyncpg://postgres:postgres@127.0.0.1:5433/notifications_test"
+
 
 @pytest_asyncio.fixture
 async def engine():
-    database_url = os.getenv(
-        "TEST_DATABASE_URL",
-        "postgresql+asyncpg://postgres:postgres@localhost:5432/notifications_test",
-    )
+    database_url = os.getenv("NOTIF_TEST_DATABASE_URL") or _DEFAULT_TEST_DB
     _engine = create_async_engine(
         database_url,
     )
@@ -32,9 +34,9 @@ async def engine():
 
 @pytest_asyncio.fixture
 async def seeded_client(engine) -> AsyncGenerator[tuple[AsyncClient, dict], None]:
-    SessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+    session_local = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
-    async with SessionLocal() as session:
+    async with session_local() as session:
         roles: dict[str, Role] = {}
         for name in RoleName:
             r = Role(name=name)
@@ -69,7 +71,7 @@ async def seeded_client(engine) -> AsyncGenerator[tuple[AsyncClient, dict], None
     }
 
     async def override_get_session() -> AsyncGenerator[AsyncSession, None]:
-        async with SessionLocal() as session:
+        async with session_local() as session:
             yield session
 
     app.dependency_overrides[get_session] = override_get_session

@@ -18,6 +18,12 @@ docker compose up --build
 - API Docs (Swagger): http://localhost:8000/docs
 - Frontend: http://localhost:5173
 
+To stop:
+
+```bash
+docker compose down
+```
+
 ## Core Features
 
 - **Role-based delivery:** Admin can target all users or specific roles
@@ -46,18 +52,67 @@ Base path: `/api/v1`
 - `PATCH /notifications/{notification_id}/read`
 - `WS /ws/{user_id}`
 
-## Local Development
+## Run The App
+
+### Docker (recommended)
+
+```bash
+docker compose up --build
+```
+
+This starts:
+
+- `postgres` (published on host `5433`)
+- `server` on `http://localhost:8000`
+- `website` on `http://localhost:5173`
+
+### Local Development (without full Docker stack)
 
 ### Server
 
 ```bash
 cd server
 uv sync
-export DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/notifications
+# From the host, Postgres is published on 5433 (see docker-compose.yml).
+export DATABASE_URL=postgresql+asyncpg://postgres:postgres@127.0.0.1:5433/notifications
 uv run alembic upgrade head
 uv run python scripts/seed.py
 uv run uvicorn src.main:app --reload
 ```
+
+## Testing
+
+### Run tests inside backend container (no manual env needed)
+
+```bash
+docker compose up --build
+docker compose exec server uv run pytest -q
+```
+
+Compose sets `NOTIF_TEST_DATABASE_URL` for the server service, so tests target
+`postgres:5432/notifications_test` automatically.
+
+### Run tests from host machine
+
+With `docker compose up -d postgres` running (published on host port **5433**):
+
+```bash
+cd server
+uv sync --group dev
+uv run pytest -q
+```
+
+The test DB `notifications_test` is created automatically when the **server**
+container starts (`scripts/ensure_test_db.py`). If you only start Postgres, create
+it once:
+
+```bash
+docker compose exec postgres psql -U postgres -d postgres -c "CREATE DATABASE notifications_test;"
+```
+
+Tests use `NOTIF_TEST_DATABASE_URL` when set. On the host, if unset, they
+default to `127.0.0.1:5433`. A generic `TEST_DATABASE_URL` in your shell is not
+used.
 
 ### Website
 
@@ -81,6 +136,7 @@ npm run dev
 
 ## Notes and Troubleshooting
 
+- **Postgres port:** The database is exposed on host **`5433`** so it does not conflict with a local PostgreSQL on `5432`.
 - **Port 5173 already in use:** Either stop the existing process on `5173` or change compose mapping to `5174:5173`.
 - **Seed script behavior:** idempotent by design; reruns log `already exists`.
 - **Realtime behavior:** WS notifications are best-effort; REST endpoints remain the source of truth.
