@@ -35,6 +35,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function bootstrap() {
+      // Load reference data in parallel so first paint has real users/roles.
       const [usersData, rolesData] = await Promise.all([
         getUsers(),
         client.get<Role[]>('/roles').then(res => res.data),
@@ -47,6 +48,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const activeUser = useMemo(
+    // Keep a stable object reference based on the selected id.
     () => users.find(user => user.id === activeUserId) ?? null,
     [activeUserId, users]
   )
@@ -64,6 +66,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     sendNotification,
   } = useNotifications(activeUser?.id ?? null)
 
+  // WebSocket events only trigger a refetch; source of truth stays in REST endpoints.
   useWebSocket(activeUser?.id ?? null, refresh)
 
   async function addNotification(
@@ -72,6 +75,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     audienceType: AudienceType,
     roleIds: number[]
   ) {
+    // No auth in this assignment: current dropdown user acts as sender.
     if (!activeUser) return
     await sendNotification({
       title,

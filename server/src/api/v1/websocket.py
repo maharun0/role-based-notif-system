@@ -13,6 +13,7 @@ async def websocket_endpoint(user_id: int, websocket: WebSocket) -> None:
     await manager.connect(user_id, websocket)
     try:
         while True:
+            # Keep the socket alive by waiting for client pings/messages.
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(user_id)

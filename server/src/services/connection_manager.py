@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 class ConnectionManager:
     def __init__(self) -> None:
+        # Single active socket per user is enough for this assignment scope.
         self._connections: dict[int, WebSocket] = {}
 
     async def connect(self, user_id: int, websocket: WebSocket) -> None:
@@ -21,6 +22,7 @@ class ConnectionManager:
     async def send(self, user_id: int, data: dict) -> None:
         ws = self._connections.get(user_id)
         if ws is None:
+            # User can still fetch updates via REST after reconnecting.
             return
         try:
             await ws.send_json(data)

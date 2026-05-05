@@ -27,6 +27,7 @@ export function useNotifications(userId: number | null) {
   const loadUnreadCount = useCallback(
     async (force = false) => {
       if (!userId) return
+      // Unread count is user-scoped and can be reused across UI state changes.
       const cached = unreadCacheRef.current.get(userId)
       if (!force && cached !== undefined) {
         setUnreadCount(cached)
@@ -47,6 +48,7 @@ export function useNotifications(userId: number | null) {
         return
       }
 
+      // Filter/search are server-driven so the UI stays consistent with backend rules.
       const params = {
         isRead: filter === 'all' ? undefined : filter === 'read',
         search: search.trim() || undefined,
@@ -62,6 +64,7 @@ export function useNotifications(userId: number | null) {
     if (!userId) return
     setLoading(true)
     try {
+      // Force a network read for the current view.
       cacheRef.current.delete(cacheKey)
       unreadCacheRef.current.delete(userId)
       await Promise.all([loadNotifications(true), loadUnreadCount(true)])
@@ -75,6 +78,7 @@ export function useNotifications(userId: number | null) {
       if (!userId) return
       await markNotificationRead(notificationId, { user_id: userId, is_read: isRead })
 
+      // Read-state toggles can change list membership in read/unread filtered views.
       unreadCacheRef.current.delete(userId)
       for (const key of cacheRef.current.keys()) {
         if (key.startsWith(`${userId}|`)) cacheRef.current.delete(key)

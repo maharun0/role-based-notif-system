@@ -39,6 +39,7 @@ async def list_notifications(
     is_read: bool | None = None,
     search: str | None = None,
 ) -> list[NotificationRecipient]:
+    # Query on recipients (not notifications) so read-state is naturally user-scoped.
     stmt = (
         select(NotificationRecipient)
         .where(NotificationRecipient.user_id == user_id)
@@ -48,6 +49,7 @@ async def list_notifications(
     if is_read is not None:
         stmt = stmt.where(NotificationRecipient.is_read == is_read)
     if search:
+        # Search applies to notification content but returns recipient rows.
         matched_ids = (
             select(Notification.id)
             .where(
@@ -69,6 +71,7 @@ async def create(payload: NotificationCreate, db: DBSession) -> Notification:
     user = result.scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
+    # This project has no auth; created_by role gate is the admin-only enforcement.
     if user.role.name != RoleName.ADMIN:
         raise HTTPException(status_code=403, detail="Only Admin users can create notifications")
     return await create_notification(db, payload)
@@ -80,6 +83,7 @@ async def mark_read(
     body: MarkReadRequest,
     db: DBSession,
 ) -> NotificationRecipient:
+    # Reads are toggled on recipient rows, keyed by (notification_id, user_id).
     result = await db.execute(
         select(NotificationRecipient)
         .where(
