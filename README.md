@@ -53,9 +53,34 @@ uv run pytest -q
 
 ## Stack
 
-- **Backend:** Python 3.11 + FastAPI + SQLAlchemy (async) + Alembic + PostgreSQL
-- **Frontend:** React 18 + Vite + TypeScript + TailwindCSS
-- **Package managers:** uv (server), npm (website)
+### Backend Stack
+
+| Layer | Technology |
+|---|---|
+| Language | Python 3.11 |
+| Framework | FastAPI |
+| ORM | SQLAlchemy (async) |
+| Migrations | Alembic |
+| Database | PostgreSQL |
+| Package Manager | uv |
+| Linting | Ruff |
+| Testing | pytest + pytest-asyncio + httpx |
+| Validation/Settings | Pydantic + pydantic-settings |
+
+### Frontend Stack
+
+| Layer | Technology |
+|---|---|
+| Language | TypeScript |
+| Framework | React 18 |
+| Build Tool | Vite |
+| Styling | TailwindCSS |
+| Package Manager | npm |
+| HTTP Client | Axios |
+| Linting | ESLint |
+| Formatting | Prettier |
+| Git Hooks | Husky |
+| Pre-commit Tasks | lint-staged |
 
 ## API Summary
 
