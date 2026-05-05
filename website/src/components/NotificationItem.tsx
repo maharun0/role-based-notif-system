@@ -8,7 +8,7 @@ interface NotificationItemProps {
 
 export default function NotificationItem({ recipient }: NotificationItemProps) {
   const { markAsRead } = useUser()
-  const { notification, is_read, delivered_at, id } = recipient
+  const { notification, is_read, delivered_at } = recipient
 
   return (
     <div
@@ -43,7 +43,7 @@ export default function NotificationItem({ recipient }: NotificationItemProps) {
             {notification.audience_type === 'ALL' ? 'All' : 'By Role'}
           </span>
           <button
-            onClick={() => markAsRead(id, !is_read)}
+            onClick={() => markAsRead(notification.id, !is_read)}
             className="text-xs text-blue-500 hover:text-blue-700 transition-colors"
           >
             {is_read ? 'Mark unread' : 'Mark read'}

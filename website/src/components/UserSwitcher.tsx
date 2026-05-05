@@ -2,6 +2,7 @@ import { useUser } from '../context/UserContext'
 
 export default function UserSwitcher() {
   const { activeUser, setActiveUser, users } = useUser()
+  if (!activeUser) return null
 
   return (
     <div className="flex items-center gap-2">

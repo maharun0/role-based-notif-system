@@ -10,6 +10,7 @@ export default function AdminPanel() {
   const [audienceType, setAudienceType] = useState<AudienceType>('ALL')
   const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([])
   const [sent, setSent] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   const isValid =
     title.trim() !== '' &&
@@ -22,15 +23,20 @@ export default function AdminPanel() {
     )
   }
 
-  function handleSend() {
+  async function handleSend() {
     if (!isValid) return
-    addNotification(title.trim(), message.trim(), audienceType, selectedRoleIds)
-    setTitle('')
-    setMessage('')
-    setAudienceType('ALL')
-    setSelectedRoleIds([])
-    setSent(true)
-    setTimeout(() => setSent(false), 2500)
+    setSubmitting(true)
+    try {
+      await addNotification(title.trim(), message.trim(), audienceType, selectedRoleIds)
+      setTitle('')
+      setMessage('')
+      setAudienceType('ALL')
+      setSelectedRoleIds([])
+      setSent(true)
+      setTimeout(() => setSent(false), 2500)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -103,8 +109,8 @@ export default function AdminPanel() {
         )}
 
         <div className="flex items-center gap-3 pt-1">
-          <Button onClick={handleSend} disabled={!isValid}>
-            Send Notification
+          <Button onClick={handleSend} disabled={!isValid || submitting}>
+            {submitting ? 'Sending...' : 'Send Notification'}
           </Button>
           {sent && (
             <span className="text-xs text-green-600 font-medium">Sent successfully</span>

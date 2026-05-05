@@ -2,23 +2,13 @@ import { useState } from 'react'
 import { useUser } from '../context/UserContext'
 import NotificationItem from './NotificationItem'
 
-type Filter = 'all' | 'unread' | 'read'
-
 export default function NotificationList() {
-  const { notifications, unreadCount } = useUser()
-  const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<Filter>('all')
+  const { notifications, unreadCount, loading, search, filter, setSearch, setFilter } = useUser()
+  const [searchDraft, setSearchDraft] = useState(search)
 
-  const filtered = notifications.filter(r => {
-    const matchesFilter =
-      filter === 'all' || (filter === 'unread' ? !r.is_read : r.is_read)
-    const q = search.toLowerCase()
-    const matchesSearch =
-      !q ||
-      r.notification.title.toLowerCase().includes(q) ||
-      r.notification.message.toLowerCase().includes(q)
-    return matchesFilter && matchesSearch
-  })
+  function submitSearch() {
+    setSearch(searchDraft)
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -42,14 +32,24 @@ export default function NotificationList() {
             <input
               type="text"
               placeholder="Search..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
+              value={searchDraft}
+              onChange={e => setSearchDraft(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') submitSearch()
+              }}
               className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+          <button
+            type="button"
+            onClick={submitSearch}
+            className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-600 hover:bg-gray-50"
+          >
+            Search
+          </button>
           <select
             value={filter}
-            onChange={e => setFilter(e.target.value as Filter)}
+            onChange={e => setFilter(e.target.value as 'all' | 'unread' | 'read')}
             className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
           >
             <option value="all">All</option>
@@ -60,10 +60,12 @@ export default function NotificationList() {
       </div>
 
       <div className="divide-y divide-gray-50">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="py-12 text-center text-sm text-gray-400">Loading notifications...</div>
+        ) : notifications.length === 0 ? (
           <div className="py-12 text-center text-sm text-gray-400">No notifications found</div>
         ) : (
-          filtered.map(r => <NotificationItem key={r.id} recipient={r} />)
+          notifications.map(r => <NotificationItem key={r.id} recipient={r} />)
         )}
       </div>
     </div>
