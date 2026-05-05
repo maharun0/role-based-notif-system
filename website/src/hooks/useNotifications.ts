@@ -87,6 +87,9 @@ export function useNotifications(userId: number | null) {
   const sendNotification = useCallback(
     async (payload: CreateNotificationPayload) => {
       await createNotification(payload)
+      // New notifications may impact multiple users (ALL/BY_ROLE), so drop caches.
+      cacheRef.current.clear()
+      unreadCacheRef.current.clear()
       await refresh()
     },
     [refresh]
