@@ -1,9 +1,9 @@
 from collections.abc import AsyncGenerator
 
+import os
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
 
 from src.core.constants import RoleName
 from src.db.base import Base
@@ -14,14 +14,19 @@ from src.main import app
 
 @pytest_asyncio.fixture
 async def engine():
+    database_url = os.getenv(
+        "TEST_DATABASE_URL",
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/notifications_test",
+    )
     _engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
+        database_url,
     )
     async with _engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     yield _engine
+    async with _engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
     await _engine.dispose()
 
 

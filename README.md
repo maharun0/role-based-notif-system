@@ -29,7 +29,7 @@ docker compose up --build
 
 ## Stack
 
-- **Backend:** Python 3.11 + FastAPI + SQLAlchemy (async) + Alembic + SQLite
+- **Backend:** Python 3.11 + FastAPI + SQLAlchemy (async) + Alembic + PostgreSQL
 - **Frontend:** React 18 + Vite + TypeScript + TailwindCSS
 - **Package managers:** uv (server), npm (website)
 
@@ -53,6 +53,7 @@ Base path: `/api/v1`
 ```bash
 cd server
 uv sync
+export DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/notifications
 uv run alembic upgrade head
 uv run python scripts/seed.py
 uv run uvicorn src.main:app --reload
@@ -70,7 +71,7 @@ npm run dev
 
 ### Server
 
-- `DATABASE_URL` (default in compose: `sqlite+aiosqlite:///./data/app.db`)
+- `DATABASE_URL` (default in compose: `postgresql+asyncpg://postgres:postgres@postgres:5432/notifications`)
 - `LOG_LEVEL` (e.g. `INFO`)
 
 ### Website
